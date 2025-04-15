@@ -1,27 +1,22 @@
 [
   {
-    "id": 2,
-    "task": "go to job",
-    "status": "done"
-  },
-  {
-    "id": 3,
-    "task": "go to school",
-    "status": "new"
-  },
-  {
-    "id": 5,
-    "task": "go to go13",
-    "status": "new"
-  },
-  {
     "id": 6,
     "task": "go to go13",
-    "status": "new"
+    "status": "done"
   },
   {
     "id": 7,
     "task": "go to go13",
     "status": "new"
+  },
+  {
+    "id": 8,
+    "task": "go ili nego",
+    "status": "new"
+  },
+  {
+    "id": 9,
+    "task": "go ili nego2",
+    "status": "done"
   }
 ]
