@@ -7,8 +7,12 @@ from config import settings
 
 
 app = FastAPI()
-storage = JsonBinStorage(api_key=settings.jsonbin_api_key, bin_id=settings.jsonbin_bin_id)
-llm = LLMClient(api_key=settings.cloudflare_api_key, account_id=settings.cloudflare_account_id)
+storage = JsonBinStorage(
+    api_key=settings.jsonbin_api_key, bin_id=settings.jsonbin_bin_id
+)
+llm = LLMClient(
+    api_key=settings.cloudflare_api_key, account_id=settings.cloudflare_account_id
+)
 
 
 class TaskCreate(BaseModel):

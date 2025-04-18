@@ -1,4 +1,4 @@
-import requests
+from base_http_client import BaseHTTPClient
 from enum import Enum
 
 
@@ -8,24 +8,26 @@ class StatusTask(str, Enum):
     DONE = "done"
 
 
-class JsonBinStorage:
+class JsonBinStorage(BaseHTTPClient):
     def __init__(self, api_key: str, bin_id: str):
-        self.api_key = api_key
-        self.bin_id = bin_id
-        self.url = f"https://api.jsonbin.io/v3/b/{self.bin_id}"
-        self.headers = {
-            "X-Master-Key": self.api_key,
+        base_url = f"https://api.jsonbin.io/v3/b/{bin_id}"
+        headers = {
+            "X-Master-Key": api_key,
             "Content-Type": "application/json",
         }
+        super().__init__(base_url=base_url, headers=headers)
 
-    def _read(self) -> list[dict]:
-        response = requests.get(self.url, headers=self.headers)
-        response.raise_for_status()
-        return response.json()["record"]
+    def parse_response(self, response):
+        data = response.json().get("record")
+        return data if isinstance(data, list) else []
+
+    # def _read(self) -> list[dict]:
+    #    response = requests.get(self.url, headers=self.headers)
+    #    response.raise_for_status()
+    #    return response.json()["record"]
 
     def _write(self, tasks: list[dict]) -> None:
-        response = requests.put(self.url, headers=self.headers, json=tasks)
-        response.raise_for_status()
+        return self._request("PUT", json=tasks)
 
     def _find_task_index(self, tasks: list[dict], task_id: int) -> int | None:
         for index, task in enumerate(tasks):
@@ -34,12 +36,11 @@ class JsonBinStorage:
         return None
 
     def get_all(self) -> list[dict]:
-        tasks = self._read()
-        return tasks
+        return self._request("GET") or []
 
     def create(self, task_text: str, status: StatusTask = StatusTask.NEW) -> dict:
-        tasks = self._read()
-        new_id = max([x["id"] for x in tasks], default=0) + 1
+        tasks = self.get_all()
+        new_id = max((x["id"] for x in tasks), default=0) + 1
         new_task = {"id": new_id, "task": task_text, "status": status.value}
         tasks.append(new_task)
         self._write(tasks)
@@ -48,7 +49,7 @@ class JsonBinStorage:
     def update(
         self, task_id: int, text_task: str = None, status: StatusTask | None = None
     ) -> dict:
-        tasks = self._read()
+        tasks = self.get_all()
         index = self._find_task_index(tasks, task_id)
         if index is None:
             raise ValueError("Задача не найдена")
@@ -61,11 +62,11 @@ class JsonBinStorage:
         return tasks[index]
 
     def delete(self, task_id: int) -> dict:
-        tasks = self._read()
+        tasks = self.get_all()
         index = self._find_task_index(tasks, task_id)
         if index is None:
             raise ValueError("Задача не найдена")
 
-        tasks.remove(tasks[index])
+        deleted = tasks.pop(index)
         self._write(tasks)
-        return {"message": "Задача удалена", "id": task_id}
+        return {"message": "Задача удалена", "id": deleted["id"]}
